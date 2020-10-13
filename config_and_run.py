@@ -45,7 +45,7 @@ if __name__ == '__main__':
 
     # ok we got the basic data in, lets get the text
 
-   def parse_text(text):
+    def parse_text(text):
         text_list = str.splitlines(text)  # split by new line
         # longest_text = max(text_list, key=len)
         # return longest_text
