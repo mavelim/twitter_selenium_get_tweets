@@ -14,6 +14,6 @@
 3. run `config_and_run.py`
 
 ## Other notes
-1. I only parsed some of the tweet -- there are some variables that you'll have to extract still, but you can use the format I layed out.
+1. I only parsed some of the tweet -- there are some variables that you'll have to extract still, but you can use the format I laid out.
 
 2. Again, this is probs the least efficient way of gathering Tweets, but hey, if you just need a sample of temporal twitter data.. its not the end of the world to run this.
