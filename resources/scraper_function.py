@@ -13,6 +13,9 @@ import random
 import pandas as pd
 from progressbar import ProgressBar
 pbar = ProgressBar()
+from datetime import timedelta, date
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 
 def sleep_for(opt1, opt2):
@@ -23,7 +26,44 @@ def sleep_for(opt1, opt2):
         sleep(1)
 
 
-def twitter_scraper(browser_path, urls, scroll_down_num, post_element_xpath):
+def daterange(date1, date2):
+    for n in range(int((date2 - date1).days) + 30):
+        yield date1 + timedelta(n)
+
+
+def list_of_dates(start_date, end_date, num_days):
+    cur_date = start = datetime.strptime(start_date, '%Y-%m-%d').date()
+    end = datetime.strptime(end_date, '%Y-%m-%d').date()
+
+    dates_list = []
+    dates_list.append(start_date)
+    while cur_date < end:
+        # print(cur_date)
+        cur_date += relativedelta(days=num_days)
+        dates_list.append(cur_date)
+
+    # if last date is after the end date, remove
+    if dates_list[-1] > end:
+        dates_list.pop(-1)
+        
+    # add the last day
+    dates_list.append(end)
+    # list of tuples of each date pairing
+    tup_list = []
+    counter = 1
+    for i in dates_list:
+        # print(i)
+        try:
+            tup_list.append((i,dates_list[counter]))
+            counter += 1
+        except:  # lazy way to skip last date pairing
+            pass
+    return tup_list
+
+
+def twitter_scraper(browser_path, urls, scroll_down_num, post_element_xpath,
+                    start_date, end_date, days_between):
+
     # setting the chromedriver path and initializing driver
     driver = webdriver.Chrome(executable_path=browser_path)
     driver.set_page_load_timeout(100)
@@ -31,27 +71,39 @@ def twitter_scraper(browser_path, urls, scroll_down_num, post_element_xpath):
     # create master df to append to
     master_df = pd.DataFrame()
 
+    dates_list = list_of_dates(start_date, end_date, num_days=days_between)
+
     # loop through the list of urls listed in config_and_run.py
-    for url in pbar(urls):
-        driver.get(url)
-        sleep_for(10, 15)  # sleep a while to be safe
+    for orig_url in pbar(urls):
+        print(str(orig_url))
+        for day_tup in dates_list:
+            print(str(day_tup[0]))
+            print(str(day_tup[1]))
+            url = orig_url + '%20until%3A' + str(day_tup[1]) + \
+                '%20since%3A' + str(day_tup[0]) + '&src=typed_query'
 
-        # scroll x number of times
-        for i in range(0, scroll_down_num):
-            # scroll down
-            driver.find_element_by_xpath('//body').send_keys(Keys.END)
-            sleep_for(4, 7)
+            driver.get(url)
+            print(str(url))
+            sleep_for(10, 15)  # sleep a while to be safe
 
-        # get a list of each post
-        post_list = driver.find_elements_by_xpath(post_element_xpath)
+            # scroll x number of times
+            for i in range(0, scroll_down_num):
+                # scroll down
+                driver.find_element_by_xpath('//body').send_keys(Keys.END)
+                sleep_for(4, 7)
 
-        post_text = [x.text for x in post_list]
+            # get a list of each post
+            post_list = driver.find_elements_by_xpath(post_element_xpath)
 
-        print(post_text)
+            post_text = [x.text for x in post_list]
 
-        # create temp dataset of each tweet
-        temp_df = pd.DataFrame(post_text, columns={'all_text'})
+            print(post_text)
 
-        master_df = master_df.append(temp_df)
+            # create temp dataset of each tweet
+            temp_df = pd.DataFrame(post_text, columns={'all_text'})
+
+            master_df = master_df.append(temp_df)
+            print('master df len   ' + str(len(master_df)))
+            print()
 
     return master_df
