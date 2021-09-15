@@ -17,6 +17,11 @@ from datetime import timedelta, date
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
+chrome_options = webdriver.ChromeOptions()
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--disable-gpu")
+
+
 
 def sleep_for(opt1, opt2):
     time_for = random.uniform(opt1, opt2)
@@ -65,7 +70,8 @@ def twitter_scraper(browser_path, urls, scroll_down_num, post_element_xpath,
                     start_date, end_date, days_between):
 
     # setting the chromedriver path and initializing driver
-    driver = webdriver.Chrome(executable_path=browser_path)
+    driver = webdriver.Chrome(options=chrome_options)
+    #driver = webdriver.Chrome(executable_path=browser_path)
     driver.set_page_load_timeout(100)
 
     # create master df to append to
